@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoboCycle — Give Waste a Smarter Future</title>
+<meta name="description" content="RoboCycle is an educational simulation about robotics in recycling: sort waste, design a station, and explore the limits of automation.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2312392b'/%3E%3Cpath d='M9 20a7 7 0 0 1 12-6M23 12a7 7 0 0 1-12 6' fill='none' stroke='%23b8e04a' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+/* ===== CSS variables & global ===== */
+:root{--ivory:#f7f3e8;--card:#fffdf6;--forest:#12392b;--forest2:#1d5740;--lime:#b8e04a;--ink:#1f2421;--muted:#5b655e;--line:#ddd6c2;--bad:#a5391f;--ok:#1d6b3f;--r:10px;--serif:Georgia,"Iowan Old Style","Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:72px}
+body{margin:0;background:var(--ivory);color:var(--ink);font:16px/1.6 var(--sans);overflow-x:hidden}
+h1,h2,h3{font-family:var(--serif);line-height:1.12;margin:0 0 .5em;color:var(--forest);font-weight:700}
+h1{font-size:clamp(2.4rem,6vw,4.4rem);letter-spacing:-.02em}h2{font-size:clamp(1.8rem,3.6vw,2.6rem)}h3{font-size:1.25rem}
+p{margin:0 0 .8em;max-width:68ch}a{color:var(--forest2)}.muted{color:var(--muted)}.small{font-size:.88rem}
+:focus-visible{outline:3px solid var(--forest2);outline-offset:2px}
+.wrap{max-width:1160px;margin:0 auto;padding:0 20px}section{padding:72px 0}section+section{border-top:1px solid var(--line)}
+.skip{position:absolute;left:-999px}.skip:focus{left:8px;top:8px;background:var(--lime);padding:8px 12px;z-index:99}
+/* ===== Components ===== */
+header{position:sticky;top:0;z-index:20;background:rgba(247,243,232,.96);border-bottom:1px solid var(--line)}
+.bar{display:flex;justify-content:space-between;align-items:center;min-height:64px}
+.brand{font:700 1.3rem var(--serif);color:var(--forest);text-decoration:none;display:flex;align-items:center;gap:8px}
+nav ul{display:flex;gap:2px;list-style:none;margin:0;padding:0}nav a{display:block;padding:10px 12px;color:var(--ink);text-decoration:none;border-radius:8px;font-size:.93rem}nav a:hover{background:#ece6d2}
+#menuBtn{display:none}
+.btn{min-height:44px;padding:10px 20px;border-radius:8px;border:1.5px solid var(--forest);background:transparent;color:var(--forest);font:600 .95rem var(--sans);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;transition:background .15s}
+.btn:hover{background:#ece6d2}.btn.pri{background:var(--forest);color:#fff}.btn.pri:hover{background:var(--forest2)}.btn.dng{border-color:var(--bad);color:var(--bad)}.btn.sm{padding:6px 14px}.btn:disabled{opacity:.45;cursor:not-allowed}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:0 1px 3px rgba(18,57,43,.06)}
+.grid{display:grid;gap:18px}.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.tag{display:inline-block;font-size:.8rem;padding:2px 10px;border-radius:6px;background:var(--lime);color:var(--forest);font-weight:600}.tag.o{background:none;border:1px solid var(--line);color:var(--muted)}
+.hero{display:grid;grid-template-columns:1fr 1.1fr;gap:40px;align-items:center;padding:40px 0 20px}.cta{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0}
+.hero svg{width:100%;height:auto}
+.arm{transform-origin:178px 250px;animation:sw 4s ease-in-out infinite alternate}@keyframes sw{from{transform:rotate(-6deg)}to{transform:rotate(7deg)}}
+.belt{animation:bt 1s linear infinite}@keyframes bt{to{stroke-dashoffset:-20}}
+.tcard svg{width:100%;height:110px;background:#eef3df;border-radius:8px;margin-bottom:12px}
+.meter{height:10px;background:#e7e0cb;border-radius:6px;overflow:hidden}.meter i{display:block;height:100%;background:var(--forest2);width:0;transition:width .4s}
+/* game */
+.lab{background:var(--forest);color:#fff;border-radius:14px;padding:28px}.lab h2,.lab h3{color:#fff}.lab .muted{color:#c5d6cb}
+.item{background:var(--card);color:var(--ink);border-radius:var(--r);padding:20px;text-align:center;min-height:120px;display:flex;flex-direction:column;justify-content:center;margin:16px 0}
+.item b{font:700 1.5rem var(--serif);color:var(--forest)}
+.bins{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.bin{min-height:56px;border-radius:8px;border:2px solid #4c7a63;background:#1d5740;color:#fff;font:600 .95rem var(--sans);cursor:pointer;padding:8px}.bin:hover:not(:disabled){border-color:var(--lime)}.bin:disabled{opacity:.6;cursor:default}.bin kbd{opacity:.7;margin-right:4px}
+.bin.right{background:var(--lime);color:var(--forest);border-color:var(--lime)}.bin.wrong{background:#f2c4b6;color:#5a1a0a;border-color:#f2c4b6}
+.fb{min-height:3.2em;margin-top:14px}.fb.ok strong{color:var(--lime)}.fb.no strong{color:#ffb59e}
+/* forms */
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px;margin-bottom:14px}
+label{display:block;font-weight:600;font-size:.92rem;margin-bottom:4px}
+select,input[type=text],input[type=number]{width:100%;min-height:44px;padding:9px 12px;background:#fff;color:var(--ink);border:1.5px solid #c9c2ab;border-radius:8px;font:inherit}
+[aria-invalid=true]{border-color:var(--bad)}.err{color:var(--bad);font-size:.85rem;min-height:1.2em}
+ul.clean{margin:0 0 .8em;padding-left:1.1em}.flow{display:flex;flex-wrap:wrap;gap:6px;list-style:none;padding:0;margin:0 0 .8em;counter-reset:s}.flow li{counter-increment:s;background:#e9efd6;border-radius:6px;padding:5px 10px;font-size:.88rem}.flow li::before{content:counter(s)". ";font-weight:700}
+.mrow{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.acts{display:flex;gap:8px;flex-wrap:wrap}
+.big{font:700 2rem var(--serif);color:var(--forest)}.formula{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;background:#eef3df;padding:8px 10px;border-radius:6px;display:block;margin-top:6px}
+.mis{display:flex;gap:12px;align-items:flex-start}.mis input{width:26px;height:26px;margin-top:3px;accent-color:var(--forest2);flex:none}.mis.done{background:#eef6d9;border-color:var(--lime)}
+details{border-bottom:1px solid var(--line);padding:12px 0}summary{cursor:pointer;font:700 1.1rem var(--serif);color:var(--forest);min-height:32px}
+dialog{border:1px solid var(--line);border-radius:12px;max-width:min(92vw,560px);background:var(--card);color:var(--ink);padding:24px}dialog::backdrop{background:rgba(18,30,24,.6)}
+#toast{position:fixed;right:16px;bottom:16px;z-index:50;display:grid;gap:8px;max-width:min(92vw,360px)}.toast{background:var(--forest);color:#fff;padding:12px 14px;border-radius:8px;border-left:5px solid var(--lime)}.toast.error{border-left-color:#ff8a6b}
+footer{background:var(--forest);color:#d4e2d9;padding:44px 0}footer a{color:var(--lime)}footer h2{color:#fff;font-size:1.5rem}footer ul{list-style:none;padding:0;display:flex;gap:6px 16px;flex-wrap:wrap}
+@media(max-width:900px){.hero{grid-template-columns:1fr}#menuBtn{display:inline-flex}nav{display:none;position:absolute;top:64px;left:0;right:0;background:var(--ivory);padding:8px 20px;border-bottom:1px solid var(--line)}nav.open{display:block}nav ul{flex-direction:column}section{padding:52px 0}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header><div class="wrap bar">
+ <a class="brand" href="#top"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#12392b"/><path d="M9 20a7 7 0 0 1 12-6M23 12a7 7 0 0 1-12 6" fill="none" stroke="#b8e04a" stroke-width="3" stroke-linecap="round"/></svg>RoboCycle</a>
+ <button class="btn sm" id="menuBtn" aria-expanded="false" aria-controls="nav">Menu</button>
+ <nav id="nav" aria-label="Main"><ul><li><a href="#tech">Technology</a></li><li><a href="#lab">Sorting Lab</a></li><li><a href="#designer">Station Designer</a></li><li><a href="#impact">Estimator</a></li><li><a href="#missions">Missions</a></li><li><a href="#learn">Learn</a></li></ul></nav>
+</div></header>
+<main id="main"><div id="top"></div>
+<div class="wrap">
+<div class="hero">
+ <div>
+  <span class="tag">Give Waste a Smarter Future.</span>
+  <h1 style="margin-top:16px">Teach a machine to tell glass from garbage.</h1>
+  <p class="muted" style="font-size:1.1rem">Recycling plants use cameras, sensors and robotic arms to sort materials faster, but machines still struggle with dirty, mixed and unusual items. Explore how it works, then try it yourself.</p>
+  <div class="cta"><a class="btn pri" href="#lab">Try the Sorting Lab</a><a class="btn" href="#designer">Design a Recycling Station</a></div>
+  <p class="small muted">RoboCycle is an educational simulation. It does not operate real equipment or measure real environmental impact.</p>
+ </div>
+ <svg viewBox="0 0 400 320" role="img" aria-label="Illustration of a robotic arm above a conveyor belt with a bottle, a can and a cardboard box">
+  <rect x="10" y="10" width="380" height="300" rx="16" fill="#eef3df"/>
+  <rect x="20" y="258" width="360" height="28" rx="14" fill="#1f2421"/><line class="belt" x1="34" y1="272" x2="366" y2="272" stroke="#b8e04a" stroke-width="3" stroke-dasharray="10 10"/>
+  <circle cx="40" cy="272" r="14" fill="#5b655e"/><circle cx="360" cy="272" r="14" fill="#5b655e"/>
+  <rect x="60" y="214" width="50" height="40" fill="#c99a5b" stroke="#8a6630" stroke-width="2"/><path d="M60 226h50" stroke="#8a6630" stroke-width="2"/>
+  <rect x="140" y="222" width="22" height="32" rx="4" fill="#9aa3a0" stroke="#5b655e" stroke-width="2"/>
+  <path d="M290 254v-34q0-8 6-12v-12h14v12q6 4 6 12v34z" fill="#7fbf9b" stroke="#12392b" stroke-width="2"/>
+  <rect x="150" y="250" width="56" height="8" fill="#12392b"/>
+  <g class="arm"><rect x="168" y="150" width="20" height="100" rx="8" fill="#12392b"/><circle cx="178" cy="150" r="14" fill="#b8e04a" stroke="#12392b" stroke-width="3"/><path d="M178 150L120 100" stroke="#1d5740" stroke-width="16" stroke-linecap="round"/><circle cx="120" cy="100" r="10" fill="#b8e04a" stroke="#12392b" stroke-width="3"/><path d="M120 100L151 186M120 100l-14 80" stroke="#12392b" stroke-width="5" stroke-linecap="round" fill="none"/></g>
+  <rect x="164" y="244" width="30" height="14" rx="3" fill="#12392b"/>
+ </svg>
+</div>
+</div>
+
+<section id="tech"><div class="wrap">
+ <h2>Recycling technology explorer</h2>
+ <p class="muted">Four robotics ideas, and how close each is to reality. Open a card for details.</p>
+ <div class="grid g2" id="techGrid"></div>
+</div></section>
+
+<section id="lab"><div class="wrap"><div class="lab">
+ <h2>Sorting Lab</h2>
+ <p class="muted">Sort 10 random items. Press 1–5 on a keyboard or tap a bin. Real rules vary by local collection program, and contaminated or composite items may need special handling, so these answers follow this game's simplified rules only.</p>
+ <div id="labPlay">
+  <div class="grid g2" style="align-items:center"><div><span id="labCount">Item 1 of 10</span> · Score <strong id="labScore">0</strong> · Best <strong id="labBest">0</strong></div><div class="meter" role="progressbar" aria-label="Sorting progress" aria-valuemin="0" aria-valuemax="10" id="labBar"><i id="labFill"></i></div></div>
+  <div class="item" id="labItem" aria-live="polite"></div>
+  <div class="bins" id="bins" role="group" aria-label="Choose a category"></div>
+  <div class="fb" id="labFb" aria-live="assertive"></div>
+  <button class="btn" id="labNext" style="background:var(--lime);border-color:var(--lime)" hidden>Next item</button>
+ </div>
+ <div id="labEnd" hidden><h3>Results</h3><p id="labRes"></p><button class="btn" id="labRestart" style="background:var(--lime);border-color:var(--lime)">Play again</button></div>
+</div></div></section>
+
+<section id="designer"><div class="wrap">
+ <h2>Recycling Station Designer</h2>
+ <p class="muted">Configure a hypothetical station. Output is conceptual, not an engineering specification or procurement advice.</p>
+ <div class="grid g2" style="align-items:start">
+  <form class="card" id="dForm" novalidate>
+   <h3 id="dTitle">New station concept</h3>
+   <div class="row"><div><label for="dName">Station name (optional)</label><input type="text" id="dName" maxlength="50"></div>
+   <div><label for="dSize">Facility size *</label><select id="dSize"><option value="">Choose…</option><option value="community">Small community</option><option value="school">School</option><option value="large">Large facility</option></select><div class="err" id="eSize"></div></div></div>
+   <div class="row"><div><label for="dFocus">Material focus *</label><select id="dFocus"><option value="">Choose…</option><option value="mixed">Mixed recyclables</option><option value="pm">Plastic and metal</option><option value="paper">Paper and cardboard</option><option value="general">General sorting</option></select><div class="err" id="eFocus"></div></div>
+   <div><label for="dAuto">Automation level *</label><select id="dAuto"><option value="">Choose…</option><option value="basic">Basic assistance</option><option value="partial">Partially automated</option><option value="adv">Advanced conceptual automation</option></select><div class="err" id="eAuto"></div></div>
+   <div><label for="dPri">Main priority *</label><select id="dPri"><option value="">Choose…</option><option value="cost">Affordability</option><option value="flex">Flexibility</option><option value="cap">Sorting capacity</option></select><div class="err" id="ePri"></div></div></div>
+   <div class="acts"><button class="btn pri" type="submit">Generate concept</button><button class="btn" type="button" id="dClear">Clear form</button></div>
+  </form>
+  <div class="card" id="dOut" aria-live="polite"><h3>Concept summary</h3><p class="muted">Choose your options and generate a concept. It will appear here.</p></div>
+ </div>
+ <h3 style="margin-top:36px">Saved designs</h3><div class="card" id="dSaved"></div>
+</div></section>
+
+<section id="impact"><div class="wrap">
+ <h2>Material estimator</h2>
+ <p class="muted">Enter your own hypothetical assumptions. Results are estimates, not measurements, and are not converted into carbon or other environmental claims.</p>
+ <div class="grid g2" style="align-items:start">
+  <form class="card" id="cForm" novalidate>
+   <div class="row"><div><label for="cKg">Material processed per day (kg)</label><input type="number" id="cKg" value="500" min="0" step="any" inputmode="decimal"><div class="err" id="eKg"></div></div>
+   <div><label for="cDays">Operating days per week (0–7)</label><input type="number" id="cDays" value="5" min="0" max="7" step="1"><div class="err" id="eDays"></div></div>
+   <div><label for="cPct">Assumed recovery share (%)</label><input type="number" id="cPct" value="70" min="0" max="100" step="any"><div class="err" id="ePct"></div></div></div>
+  </form>
+  <div class="card" aria-live="polite"><p class="muted small">Hypothetical estimates from your inputs</p>
+   <div class="grid g3"><div><div class="big" id="oProc">–</div>processed weekly (kg)<code class="formula">kg/day × days</code></div><div><div class="big" id="oRec">–</div>recovered weekly (kg)<code class="formula">processed × % ÷ 100</code></div><div><div class="big" id="oLost">–</div>not recovered (kg)<code class="formula">processed − recovered</code></div></div></div>
+ </div>
+</div></section>
+
+<section id="missions"><div class="wrap">
+ <h2>Sustainability missions</h2>
+ <p class="muted">Practical learning challenges. Points reward learning only, not verified environmental impact.</p>
+ <div class="grid g2" style="margin-bottom:18px"><div class="card"><strong id="pPts">0 points</strong><div class="meter" style="margin:8px 0" role="progressbar" aria-label="Mission progress" aria-valuemin="0" aria-valuemax="100" id="pBar"><i id="pFill"></i></div><span class="small muted" id="pTxt"></span></div><div class="card"><strong>Achievements</strong><div id="badges" style="margin-top:6px"></div></div></div>
+ <div class="grid g2" id="misGrid"></div>
+</div></section>
+
+<section id="learn"><div class="wrap">
+ <h2>Robotics learning hub</h2>
+ <div class="grid g2" style="align-items:start"><div id="lessons"></div>
+ <svg viewBox="0 0 320 220" role="img" aria-label="Diagram of a sorting pipeline: camera, vision software, arm, bins, with a human supervisor" style="width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px">
+  <g font-family="system-ui" font-size="12" text-anchor="middle" fill="#1f2421"><rect x="20" y="30" width="80" height="40" rx="8" fill="#eef3df" stroke="#12392b"/><text x="60" y="55">Camera</text><rect x="120" y="30" width="80" height="40" rx="8" fill="#eef3df" stroke="#12392b"/><text x="160" y="55">Vision model</text><rect x="220" y="30" width="80" height="40" rx="8" fill="#eef3df" stroke="#12392b"/><text x="260" y="55">Arm + gripper</text>
+  <path d="M100 50h20M200 50h20M260 70v40" stroke="#12392b" stroke-width="2" fill="none"/><rect x="200" y="110" width="120" height="40" rx="8" fill="#b8e04a" stroke="#12392b"/><text x="260" y="135">Sorted bins</text>
+  <rect x="60" y="150" width="160" height="44" rx="8" fill="#fff" stroke="#a5391f" stroke-dasharray="5 4"/><text x="140" y="170">Human supervisor</text><text x="140" y="186" font-size="10">checks errors, handles odd items</text></g></svg></div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+ <h2>RoboCycle</h2><p>Our mission: make recycling robotics understandable, so more people ask good questions about waste.</p>
+ <ul><li><a href="#tech">Technology</a></li><li><a href="#lab">Sorting Lab</a></li><li><a href="#designer">Designer</a></li><li><a href="#impact">Estimator</a></li><li><a href="#missions">Missions</a></li><li><a href="#learn">Learn</a></li></ul>
+ <p class="small">RoboCycle is an educational demonstration. All calculated figures are estimates from user assumptions, not verified measurements. Always follow your local waste-management and recycling guidance.</p>
+ <button class="btn" id="resetAll" style="color:#fff;border-color:#fff">Reset progress and saved designs</button>
+</div></footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog id="dlg" aria-labelledby="dlgT"><h3 id="dlgT"></h3><div id="dlgB"></div><div class="acts" id="dlgA" style="margin-top:14px"></div></dialog>
+
+<script>
+"use strict";
+/* ===== Helpers ===== */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const li=a=>`<ul class="clean">${a.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+function toast(m,t){const e=document.createElement("div");e.className="toast "+(t||"");e.textContent=m;$("#toast").append(e);setTimeout(()=>e.remove(),4200)}
+/* Generic dialog: title, body HTML, actions [{label,cls,fn}] (Escape and Close always work) */
+function modal(title,body,actions){$("#dlgT").textContent=title;$("#dlgB").innerHTML=body;const a=$("#dlgA");a.innerHTML="";
+ (actions||[]).concat([{label:"Close"}]).forEach(x=>{const b=document.createElement("button");b.type="button";b.className="btn "+(x.cls||"");b.textContent=x.label;b.onclick=()=>{if(!x.fn||x.fn()!==false)$("#dlg").close()};a.append(b)});$("#dlg").showModal()}
+
+/* ===== State & persistence ===== */
+const KEY="robocycle.v1";
+const S={best:0,done:[],designs:[],edit:null,draft:null};
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(!d||typeof d!=="object")return;
+ S.best=Number.isInteger(d.best)?Math.min(10,Math.max(0,d.best)):0;S.done=Array.isArray(d.done)?d.done.filter(i=>Number.isInteger(i)&&i>=0&&i<MIS.length):[];
+ S.designs=Array.isArray(d.designs)?d.designs.filter(x=>x&&x.id&&x.name&&OPT.size[x.size]&&OPT.focus[x.focus]&&OPT.auto[x.auto]&&OPT.pri[x.pri]):[]}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({best:S.best,done:S.done,designs:S.designs}))}catch(e){toast("Storage unavailable: progress will last only until you close this page.","error")}}
+
+/* ===== Data ===== */
+const TECH=[
+ {n:"Robotic Sorting Arm",st:"Deployed in industrial plants (varies by facility)",how:"A camera and software classify items on a belt; an arm with a suction or pinch gripper picks chosen items into bins.",use:"Material recovery facilities that sort mixed recyclables.",ben:["Works long shifts without fatigue","Can learn new categories from new training data"],lim:["Struggles with dirty, crushed or overlapping items","Needs maintenance and human oversight"],
+  svg:'<path d="M30 90h140" stroke="#1f2421" stroke-width="6"/><path d="M60 90V50l40-24" stroke="#12392b" stroke-width="9" stroke-linecap="round" fill="none"/><circle cx="100" cy="26" r="6" fill="#b8e04a"/><path d="M100 30v30" stroke="#12392b" stroke-width="3"/><rect x="120" y="72" width="16" height="18" fill="#9aa3a0"/>'},
+ {n:"Conveyor Inspection System",st:"Established technology in industry",how:"Sensors and cameras scan material as it moves along a belt and flag contaminants or categories for removal.",use:"Quality checks before or after sorting.",ben:["Consistent, repeatable scanning","Produces data on what is in the stream"],lim:["Detects only what it was set up to see","Dirty lenses and cluttered belts reduce accuracy"],
+  svg:'<rect x="20" y="84" width="160" height="14" rx="7" fill="#1f2421"/><rect x="70" y="30" width="60" height="12" rx="3" fill="#12392b"/><path d="M80 42l-14 42M120 42l14 42" stroke="#b8e04a" stroke-width="2" stroke-dasharray="4 3"/><rect x="95" y="68" width="20" height="16" fill="#c99a5b"/>'},
+ {n:"Autonomous Collection Robot",st:"Concept and early prototypes in some settings",how:"A hypothetical mobile robot uses sensors and a map to find and collect litter in a defined area such as a campus or park.",use:"Controlled, bounded spaces with clear boundaries.",ben:["Could reduce repetitive manual pickup","Can cover set routes on a schedule"],lim:["Rough ground, crowds and weather are hard","Telling litter from objects is error-prone"],
+  svg:'<rect x="60" y="56" width="80" height="32" rx="8" fill="#12392b"/><circle cx="76" cy="92" r="10" fill="#1f2421"/><circle cx="124" cy="92" r="10" fill="#1f2421"/><rect x="88" y="40" width="24" height="16" fill="#1d5740"/><circle cx="100" cy="48" r="4" fill="#b8e04a"/><path d="M140 70h26" stroke="#12392b" stroke-width="4"/>'},
+ {n:"Environmental Monitoring Rover",st:"Research prototypes and specialised field tools",how:"A rover carries sensors, for example for air or water readings, along a route and records data for people to analyse.",use:"Repeated inspection of sites where regular readings matter.",ben:["Repeatable data collection on a set route","Keeps people out of unpleasant spots"],lim:["Sensors need calibration and expert interpretation","Battery and terrain limit range"],
+  svg:'<rect x="62" y="62" width="76" height="24" rx="6" fill="#1d5740"/><circle cx="76" cy="92" r="9" fill="#1f2421"/><circle cx="124" cy="92" r="9" fill="#1f2421"/><path d="M100 62V34M100 34l16-8" stroke="#12392b" stroke-width="3"/><circle cx="118" cy="26" r="5" fill="#b8e04a"/>'}];
+const MATS=[["Paper and cardboard","paper"],["Plastic containers","plastic"],["Metal cans","metal"],["Glass bottles","glass"],["General waste","general"]];
+const ITEMS=[
+ ["Clean cardboard box","paper","Clean cardboard is a common paper-fibre stream."],["Newspaper","paper","Plain paper is usually accepted as paper."],["Paper envelope","paper","Plain paper envelopes go with paper in most programs."],
+ ["Empty water bottle","plastic","Rigid plastic bottles are a widely collected plastic container."],["Rinsed yoghurt tub","plastic","Rinsed rigid tubs are usually collected as plastic containers."],["Shampoo bottle","plastic","Empty rigid bottles are commonly collected as plastic."],
+ ["Aluminium drink can","metal","Aluminium cans are valuable and widely recycled."],["Steel food can","metal","Steel cans go with metal, ideally empty and rinsed."],["Clean foil tray","metal","Clean foil trays are metal; food residue would make it general."],
+ ["Glass jam jar","glass","Glass jars are sorted with glass bottles in the game's rules."],["Glass juice bottle","glass","Glass bottles are collected as glass."],["Wine bottle","glass","Glass bottles belong in the glass stream."],
+ ["Greasy pizza box","general","Grease soaks into the fibre, so many programs treat it as general waste."],["Used tissue","general","Used tissues are too short-fibred and soiled for paper recycling."],["Crisp packet","general","Layered plastic-foil film is hard to separate, so it is general waste here."],
+ ["Broken ceramic mug","general","Ceramics melt differently from glass and contaminate it."],["Plastic-lined coffee cup","general","The plastic lining bonds to paper, which makes it a composite."]];
+const MIS=[["Spot five recyclable materials","Find five different recyclable items around you and note their material.",10],["Learn your local rules","Look up what your local collection program accepts.",20],["Compare manual and robotic sorting","List two strengths and two limits of each.",15],["Sketch a helper robot","Draw a robot that could help with a local waste problem.",15],["Design a school sorting station","Use the Station Designer to plan one for a school.",20]];
+const LESSONS=[["How robotic arms work","Joints driven by motors let an arm move its end through space. Software calculates joint angles to reach a target, then a gripper closes."],["How computer vision supports recognition","A camera image is fed to a trained model that guesses what each item is. It is only as good as its training examples and lighting."],["How sensors assist","Cameras, near-infrared sensors and metal detectors measure different properties, so combining them gives a fuller picture."],["Why grippers matter","Soft, rigid, suction and pinch grippers each suit different shapes. A bad grip drops items or damages them."],["Why contamination is hard","Food, liquids and mixed materials change how an item looks and behaves, so even people and machines disagree."],["Why human supervision matters","People handle unusual items, fix jams, check quality and make safety decisions."],["Limits of automation","Robots cost money, need maintenance and can misclassify. Reducing waste and good local collection still matter most."]];
+const OPT={size:{community:"Small community",school:"School",large:"Large facility"},focus:{mixed:"Mixed recyclables",pm:"Plastic and metal",paper:"Paper and cardboard",general:"General sorting"},auto:{basic:"Basic assistance",partial:"Partially automated",adv:"Advanced conceptual automation"},pri:{cost:"Affordability",flex:"Flexibility",cap:"Sorting capacity"}};
+
+/* ===== Technology explorer ===== */
+$("#techGrid").innerHTML=TECH.map((t,i)=>`<article class="card tcard"><svg viewBox="0 0 200 110" role="img" aria-label="Illustration: ${esc(t.n)}">${t.svg}</svg><span class="tag o">${esc(t.st)}</span><h3 style="margin-top:8px">${t.n}</h3><p class="muted">${t.use}</p><button class="btn sm" data-tech="${i}">Learn more</button></article>`).join("");
+function showTech(i){const t=TECH[i];modal(t.n,`<p><span class="tag o">${esc(t.st)}</span></p><p><strong>How it works:</strong> ${esc(t.how)}</p><p><strong>Where it could help:</strong> ${esc(t.use)}</p><strong>Benefits</strong>${li(t.ben)}<strong>Limitations</strong>${li(t.lim)}<p class="small muted">Educational description, not a product specification.</p>`)}
+
+/* ===== Sorting Lab ===== */
+const G={q:[],i:0,score:0,locked:false,answered:false};
+$("#bins").innerHTML=MATS.map((m,i)=>`<button class="bin" data-cat="${m[1]}"><kbd>${i+1}</kbd>${m[0]}</button>`).join("");
+function gameStart(){G.q=[...ITEMS].sort(()=>Math.random()-.5).slice(0,10);G.i=0;G.score=0;G.answered=false;$("#labEnd").hidden=true;$("#labPlay").hidden=false;showItem()}
+function showItem(){const it=G.q[G.i];G.answered=false;$("#labItem").innerHTML=`<span class="muted small">What does this go in?</span><b>${esc(it[0])}</b>`;
+ $("#labCount").textContent=`Item ${G.i+1} of 10`;$("#labScore").textContent=G.score;$("#labBest").textContent=S.best;$("#labFb").className="fb";$("#labFb").textContent="";$("#labNext").hidden=true;
+ document.querySelectorAll(".bin").forEach(b=>{b.disabled=false;b.className="bin"});setBar()}
+function setBar(){$("#labFill").style.width=G.i*10+"%";$("#labBar").setAttribute("aria-valuenow",G.i)}
+/* Answer guard: each item scores once; the next item only appears after Next */
+function answer(cat){if(G.answered||!$("#labEnd").hidden)return;G.answered=true;const it=G.q[G.i],ok=cat===it[1];if(ok)G.score++;
+ document.querySelectorAll(".bin").forEach(b=>{b.disabled=true;if(b.dataset.cat===it[1])b.classList.add("right");else if(b.dataset.cat===cat)b.classList.add("wrong")});
+ $("#labScore").textContent=G.score;$("#labFb").className="fb "+(ok?"ok":"no");$("#labFb").innerHTML=`<strong>${ok?"Correct.":"Not quite."}</strong> ${esc(it[2])}`;
+ $("#labFill").style.width=(G.i+1)*10+"%";$("#labNext").hidden=false;$("#labNext").textContent=G.i===9?"See results":"Next item";$("#labNext").focus()}
+function nextItem(){if(!G.answered)return;if(G.i===9){endGame();return}G.i++;showItem()}
+function endGame(){$("#labPlay").hidden=true;$("#labEnd").hidden=false;if(G.score>S.best){S.best=G.score;save()}
+ const msg=G.score>=9?"Excellent sorting.":G.score>=6?"Solid work.":"Good start; read each explanation and try again.";
+ $("#labRes").textContent=`You sorted 10 items and got ${G.score} right. ${msg} Best score: ${S.best}. Remember: local rules differ.`;$("#labBest").textContent=S.best;$("#labRestart").focus()}
+document.addEventListener("keydown",e=>{if(e.target.closest("input,select,textarea,dialog"))return;const n=+e.key;if(n>=1&&n<=5&&$("#labEnd").hidden&&!e.ctrlKey&&!e.metaKey)answer(MATS[n-1][1])});
+
+/* ===== Station designer ===== */
+function buildDesign(d){const comp=[],flow=["Receive material"],adv=[],trade=[],sup=[];
+ flow.push(d.auto==="basic"?"Manual pre-sort":"Feed onto belt");
+ if(d.focus==="mixed"||d.focus==="general")comp.push("Conveyor with camera inspection");if(d.focus==="pm")comp.push("Metal detector and plastic sensor on belt");if(d.focus==="paper")comp.push("Cardboard and paper feed table with vision camera");
+ if(d.auto==="basic")comp.push("Hand-sorting stations with lifting aids","Simple sensor to flag metal");
+ if(d.auto==="partial")comp.push("One sorting arm for a single target material","Operator station for review");
+ if(d.auto==="adv")comp.push("Multiple arms with learning vision (conceptual)","Data dashboard for errors and throughput");
+ flow.push("Scan and identify",d.auto==="basic"?"Hand sorting to bins":"Robotic pick to bins","Quality inspection","Baling or storage");
+ if(d.pri==="cost"){adv.push("Lower upfront cost");trade.push("Lower throughput and more manual work")}
+ if(d.pri==="flex"){adv.push("Easier to re-train for new materials");trade.push("Flexible set-ups can be less efficient for one task")}
+ if(d.pri==="cap"){adv.push("Higher potential volume");trade.push("Higher cost and maintenance needs")}
+ if(d.size==="school"){adv.push("Strong teaching value");trade.push("Small volumes may not justify advanced automation")}
+ if(d.size==="large"){adv.push("Scale supports automation");trade.push("Needs trained technicians and space")}
+ if(d.size==="community")adv.push("Close to local users and feedback");
+ if(d.auto==="adv")trade.push("Advanced automation here is conceptual and needs real engineering study");
+ sup.push("A supervisor monitors quality and safety",d.auto==="basic"?"Staff trained in safe manual handling":"Technicians handle jams and unusual items");
+ return{comp,flow,adv,trade,sup}}
+const dName=d=>d.name||`${OPT.size[d.size]} ${OPT.focus[d.focus].toLowerCase()} station`;
+function dSummary(d){const b=buildDesign(d);return `<h3>${esc(dName(d))}</h3><p class="muted small">${OPT.size[d.size]} · ${OPT.focus[d.focus]} · ${OPT.auto[d.auto]} · Priority: ${OPT.pri[d.pri]}</p>
+ <strong>Suggested robotic components</strong>${li(b.comp)}<strong>Process flow</strong><ol class="flow">${b.flow.map(f=>`<li>${esc(f)}</li>`).join("")}</ol><strong>Potential advantages</strong>${li(b.adv)}<strong>Trade-offs</strong>${li(b.trade)}<strong>Human supervision</strong>${li(b.sup)}
+ <p class="small muted">Conceptual only. Not an engineering specification or procurement advice.</p><div class="acts"><button class="btn pri" id="dSave">${S.edit?"Save changes":"Save design"}</button></div>`}
+const DF=[["dSize","eSize","size","a facility size"],["dFocus","eFocus","focus","a material focus"],["dAuto","eAuto","auto","an automation level"],["dPri","ePri","pri","a main priority"]];
+function dSubmit(e){e.preventDefault();let ok=true;DF.forEach(([f,er,,t])=>{const bad=!$("#"+f).value;$("#"+f).setAttribute("aria-invalid",bad);$("#"+er).textContent=bad?"Choose "+t+".":"";if(bad&&ok)$("#"+f).focus();ok=ok&&!bad});
+ if(!ok){toast("Choose the highlighted options first.","error");return}
+ S.draft={id:S.edit||"d"+Date.now(),name:$("#dName").value.trim(),size:$("#dSize").value,focus:$("#dFocus").value,auto:$("#dAuto").value,pri:$("#dPri").value};$("#dOut").innerHTML=dSummary(S.draft)}
+function dClear(){$("#dForm").reset();S.edit=null;S.draft=null;$("#dTitle").textContent="New station concept";DF.forEach(([f,er])=>{$("#"+f).removeAttribute("aria-invalid");$("#"+er).textContent=""});$("#dOut").innerHTML='<h3>Concept summary</h3><p class="muted">Choose your options and generate a concept. It will appear here.</p>'}
+function dSaveDraft(){const d=S.draft;if(!d)return;const i=S.designs.findIndex(x=>x.id===d.id);if(i>=0)S.designs[i]=d;else S.designs.push(d);save();toast(i>=0?"Design updated.":"Design saved.");dClear();renderSaved();}
+function renderSaved(){$("#dSaved").innerHTML=S.designs.length?S.designs.map(d=>`<div class="mrow"><div><strong>${esc(dName(d))}</strong><div class="muted small">${OPT.size[d.size]} · ${OPT.focus[d.focus]} · ${OPT.auto[d.auto]}</div></div><div class="acts"><button class="btn sm" data-dedit="${d.id}">Edit</button><button class="btn sm" data-dren="${d.id}">Rename</button><button class="btn sm dng" data-ddel="${d.id}">Delete</button></div></div>`).join(""):'<p class="muted">No saved designs yet. Generate a concept above and choose Save design.</p>'}
+function dEdit(id){const d=S.designs.find(x=>x.id===id);if(!d)return;S.edit=id;$("#dName").value=d.name||"";$("#dSize").value=d.size;$("#dFocus").value=d.focus;$("#dAuto").value=d.auto;$("#dPri").value=d.pri;$("#dTitle").textContent="Editing: "+dName(d);S.draft=d;$("#dOut").innerHTML=dSummary(d);$("#designer").scrollIntoView();toast("Design loaded. Change options and generate again.")}
+function dRename(id){const d=S.designs.find(x=>x.id===id);if(!d)return;modal("Rename design",`<label for="rnIn">New name</label><input type="text" id="rnIn" maxlength="50" value="${esc(d.name||"")}">`,[{label:"Save name",cls:"pri",fn:()=>{const v=$("#rnIn").value.trim();if(!v){toast("Enter a name first.","error");return false}d.name=v;save();renderSaved();toast("Design renamed.")}}]);$("#rnIn").focus()}
+function dDel(id){const d=S.designs.find(x=>x.id===id);if(!d)return;modal("Delete design?",`<p>Delete "${esc(dName(d))}"? This cannot be undone.</p>`,[{label:"Delete",cls:"dng",fn:()=>{S.designs=S.designs.filter(x=>x.id!==id);if(S.edit===id)dClear();save();renderSaved();toast("Design deleted.")}}])}
+
+/* ===== Estimator (live) ===== */
+function calc(){const v={kg:$("#cKg").value,days:$("#cDays").value,pct:$("#cPct").value};let ok=true;
+ const chk=(id,er,val,min,max,msg)=>{const n=Number(val),bad=val===""||!isFinite(n)||n<min||n>max;$("#"+id).setAttribute("aria-invalid",bad);$("#"+er).textContent=bad?msg:"";ok=ok&&!bad};
+ chk("cKg","eKg",v.kg,0,1e9,"Enter 0 or more.");chk("cDays","eDays",v.days,0,7,"Enter 0 to 7 days.");chk("cPct","ePct",v.pct,0,100,"Enter 0 to 100.");
+ if(!ok){["oProc","oRec","oLost"].forEach(i=>$("#"+i).textContent="–");return}
+ const proc=+v.kg*+v.days,rec=proc*+v.pct/100,lost=proc-rec,f=n=>(Math.round(n*10)/10).toLocaleString();
+ $("#oProc").textContent=f(proc);$("#oRec").textContent=f(rec);$("#oLost").textContent=f(lost)}
+
+/* ===== Missions ===== */
+function renderMis(){$("#misGrid").innerHTML=MIS.map((m,i)=>`<label class="card mis ${S.done.includes(i)?"done":""}" style="margin:0"><input type="checkbox" data-mis="${i}" ${S.done.includes(i)?"checked":""}><span><strong>${m[0]}</strong> <span class="tag o">${m[2]} pts</span><br><span class="muted">${m[1]}</span></span></label>`).join("");
+ const pts=S.done.reduce((a,i)=>a+MIS[i][2],0),total=MIS.reduce((a,m)=>a+m[2],0),pct=Math.round(pts/total*100);
+ $("#pPts").textContent=pts+" points";$("#pFill").style.width=pct+"%";$("#pBar").setAttribute("aria-valuenow",pct);$("#pTxt").textContent=`${S.done.length} of ${MIS.length} missions complete`;
+ const bd=[[1,"First step"],[3,"Explorer"],[5,"All missions done"]].filter(b=>S.done.length>=b[0]);if(S.best>=9)bd.push([0,"Sharp sorter"]);
+ $("#badges").innerHTML=bd.length?bd.map(b=>`<span class="tag" style="margin:2px">${b[1]}</span>`).join(""):'<span class="muted small">Complete a mission to earn your first badge.</span>'}
+function toggleMis(i,on){S.done=on?[...new Set([...S.done,i])]:S.done.filter(x=>x!==i);save();renderMis();toast(on?"Mission marked complete.":"Mission marked incomplete.")}
+
+/* ===== Learn ===== */
+$("#lessons").innerHTML=LESSONS.map(l=>`<details><summary>${l[0]}</summary><p class="muted">${l[1]}</p></details>`).join("");
+
+/* ===== Events & init ===== */
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.tech)showTech(b.dataset.tech);else if(b.dataset.cat)answer(b.dataset.cat);else if(b.dataset.dedit)dEdit(b.dataset.dedit);else if(b.dataset.dren)dRename(b.dataset.dren);else if(b.dataset.ddel)dDel(b.dataset.ddel);else if(b.id==="dSave")dSaveDraft();
+ if(b.closest("nav")){$("#nav").classList.remove("open");$("#menuBtn").setAttribute("aria-expanded","false")}});
+document.querySelectorAll("nav a").forEach(a=>a.addEventListener("click",()=>{$("#nav").classList.remove("open");$("#menuBtn").setAttribute("aria-expanded","false")}));
+$("#misGrid").addEventListener("change",e=>{if(e.target.dataset.mis!==undefined)toggleMis(+e.target.dataset.mis,e.target.checked)});
+$("#labNext").addEventListener("click",nextItem);$("#labRestart").addEventListener("click",gameStart);
+$("#dForm").addEventListener("submit",dSubmit);$("#dClear").addEventListener("click",dClear);
+$("#cForm").addEventListener("input",calc);$("#cForm").addEventListener("submit",e=>e.preventDefault());
+$("#menuBtn").addEventListener("click",()=>{const o=$("#nav").classList.toggle("open");$("#menuBtn").setAttribute("aria-expanded",o)});
+$("#resetAll").addEventListener("click",()=>modal("Reset everything?","<p>This clears your best score, mission progress and saved designs. It cannot be undone.</p>",[{label:"Reset",cls:"dng",fn:()=>{S.best=0;S.done=[];S.designs=[];S.edit=null;try{localStorage.removeItem(KEY)}catch(x){}dClear();renderSaved();renderMis();gameStart();toast("Progress reset.")}}]));
+load();renderSaved();renderMis();calc();gameStart();
+</script>
+</body>
+</html>
